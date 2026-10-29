@@ -69,3 +69,55 @@ export function renderPostsPageComponent({ appEl }) {
     });
   }
 }
+
+export function renderUserPostsPageComponent({ appEl }) {
+  // @TODO: реализовать рендер постов из api
+  console.log('Актуальный список постов юзера:', posts);
+
+  const container = document.createElement('div');
+  container.classList.add('page-container');
+  const headerContainer = document.createElement('div');
+  headerContainer.classList.add('header-container');
+  const postsContainer = document.createElement('ul');
+  postsContainer.classList.add('posts');
+  container.append(headerContainer, postsContainer);
+
+  posts.forEach((post) => {
+    const postEl = document.createElement('li');
+    postEl.classList.add('post');
+    const isLikeImage = post.isLiked
+      ? 'like-active.svg'
+      : 'like-not-active.svg';
+
+    postEl.innerHTML = `
+      <div class="post-image-container">
+        <img class="post-image" src="${post.imageUrl}">
+      </div>
+      <div class="post-likes">
+        <button data-post-id="${post.id}" class="like-button">
+          <img src="./assets/images/${isLikeImage}">
+        </button>
+        <p class="post-likes-text">
+          Нравится: <strong>${post.likes.length}</strong>
+        </p>
+      </div>
+      <p class="post-text">
+        <span class="user-name">${post.user.name}</span>
+        ${post.description}
+      </p>
+      <p class="post-date">
+        ${post.createdAt}
+      </p>
+
+    `;
+
+    postsContainer.append(postEl);
+  });
+
+  appEl.innerHTML = '';
+  appEl.append(container);
+
+  renderHeaderComponent({
+    element: document.querySelector('.header-container'),
+  });
+}
