@@ -1,4 +1,4 @@
-import { format } from 'https://cdn.jsdelivr.net/npm/date-fns@3/+esm';
+import { formatDistanceToNow } from 'https://cdn.jsdelivr.net/npm/date-fns@3/+esm';
 import {
   enGB,
   eo,
@@ -7,8 +7,9 @@ import {
 
 const locales = { enGB, eo, ru };
 
-export default function (date, formatStr = 'PP') {
-  return format(date, formatStr, {
+export default function (date) {
+  return formatDistanceToNow(new Date(date), {
+    addSuffix: true,
     locale: locales[window.__localeId__],
   });
 }

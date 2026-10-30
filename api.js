@@ -24,7 +24,7 @@ export function getPosts({ token }) {
 }
 
 export function getUserPosts({ token, userId }) {
-  return fetch(postsHost + `/user-posts/${userId}`, {
+  return fetch(`${postsHost}/user-posts/${userId}`, {
     method: 'GET',
     headers: {
       Authorization: token,
@@ -52,9 +52,12 @@ export function addPost({ token, description, imageUrl }) {
   })
     .then((response) => {
       if (response.status === 400) {
-        const messageError =
-          'В теле запроса не передан description или imageUrl, либо в description - пустая строчка.';
-        throw new Error(messageError);
+        throw new Error(
+          'В теле запроса не передан description или imageUrl, либо в description — пустая строка.'
+        );
+      }
+      if (response.status === 401) {
+        throw new Error('Нет авторизации');
       }
       return response.json();
     })
@@ -64,13 +67,16 @@ export function addPost({ token, description, imageUrl }) {
 }
 
 export function toLikeApi({ token, liked, postId }) {
-  return fetch(postsHost + `/${postId}/${liked}`, {
+  return fetch(`${postsHost}/${postId}/${liked}`, {
     method: 'POST',
     headers: {
       Authorization: token,
     },
   })
     .then((response) => {
+      if (response.status === 401) {
+        throw new Error('Нет авторизации');
+      }
       if (response.status !== 200) {
         throw new Error('Ошибка при лайке');
       }
@@ -81,8 +87,25 @@ export function toLikeApi({ token, liked, postId }) {
     });
 }
 
+export function deletePost({ token, postId }) {
+  return fetch(`${postsHost}/${postId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: token,
+    },
+  }).then((response) => {
+    if (response.status === 401) {
+      throw new Error('Нет авторизации');
+    }
+    if (response.status !== 200) {
+      throw new Error('Не удалось удалить пост');
+    }
+    return response.json();
+  });
+}
+
 export function registerUser({ login, password, name, imageUrl }) {
-  return fetch(baseHost + '/api/user', {
+  return fetch(`${baseHost}/api/user`, {
     method: 'POST',
     body: JSON.stringify({
       login,
@@ -99,7 +122,7 @@ export function registerUser({ login, password, name, imageUrl }) {
 }
 
 export function loginUser({ login, password }) {
-  return fetch(baseHost + '/api/user/login', {
+  return fetch(`${baseHost}/api/user/login`, {
     method: 'POST',
     body: JSON.stringify({
       login,
@@ -118,7 +141,7 @@ export function uploadImage({ file }) {
   const data = new FormData();
   data.append('file', file);
 
-  return fetch(baseHost + '/api/upload/image', {
+  return fetch(`${baseHost}/api/upload/image`, {
     method: 'POST',
     body: data,
   }).then((response) => {

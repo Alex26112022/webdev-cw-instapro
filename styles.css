@@ -82,6 +82,11 @@
   display: flex;
   flex-direction: row;
   align-items: center;
+  gap: 8px;
+}
+
+.post-likes-text {
+  margin: 0;
 }
 
 .like-button {
@@ -195,4 +200,55 @@
   box-sizing: border-box;
   width: 100%;
   text-align: center;
+}
+
+.post-delete-button {
+  border: 1px solid #e53935;
+  color: #e53935;
+  background-color: transparent;
+  font-size: 12px;
+  line-height: 16px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.post-delete-button:hover {
+  background-color: #e53935;
+  color: #fff;
+}
+
+.post-delete-button:active {
+  background-color: #c62828;
+  border-color: #c62828;
+}
+
+@keyframes heart-beat {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.25);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  75% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.like-button img.is-beating {
+  animation: heart-beat 0.8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.like-button {
+  cursor: pointer;
 }

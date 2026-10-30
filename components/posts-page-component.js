@@ -1,70 +1,60 @@
 import format from '../format.js';
-import { goToPage, posts, toLike } from '../index.js';
+import { escapeHtml, getUserFromLocalStorage } from '../helpers.js';
+import { goToPage, posts, removePost, toLike } from '../index.js';
 import { USER_POSTS_PAGE } from '../routes.js';
 import { renderHeaderComponent } from './header-component.js';
 
 window.__localeId__ = 'ru';
 
-export function renderPostsPageComponent({ appEl }) {
-  // @TODO: реализовать рендер постов из api
-  console.log('Актуальный список постов:', posts);
+function renderPostTemplate(post, { showHeader = true } = {}) {
+  const likeImage = post.isLiked ? 'like-active.svg' : 'like-not-active.svg';
+  const currentUser = getUserFromLocalStorage();
+  const canDelete =
+    !!currentUser && String(currentUser.id) === String(post.user.id);
 
-  /**
-   * @TODO: чтобы отформатировать дату создания поста в виде "19 минут назад"
-   * можно использовать https://date-fns.org/v2.29.3/docs/formatDistanceToNow
-   */
-  const container = document.createElement('div');
-  container.classList.add('page-container');
-  const headerContainer = document.createElement('div');
-  headerContainer.classList.add('header-container');
-  const postsContainer = document.createElement('ul');
-  postsContainer.classList.add('posts');
-  container.append(headerContainer, postsContainer);
-
-  posts.forEach((post) => {
-    const postEl = document.createElement('li');
-    postEl.classList.add('post');
-    const isLikeImage = post.isLiked
-      ? 'like-active.svg'
-      : 'like-not-active.svg';
-
-    postEl.innerHTML = `
-      <div class="post-header" data-user-id="${post.user.id}">
-          <img src="${post.user.imageUrl}" class="post-header__user-image">
-          <p class="post-header__user-name">${post.user.name}</p>
+  const headerHtml = showHeader
+    ? `
+      <div class="post-header" data-user-id="${escapeHtml(post.user.id)}">
+        <img src="${escapeHtml(post.user.imageUrl)}" class="post-header__user-image">
+        <p class="post-header__user-name">${escapeHtml(post.user.name)}</p>
       </div>
+    `
+    : '';
+
+  const deleteButtonHtml = canDelete
+    ? `<button class="post-delete-button button secondary-button" data-post-id="${escapeHtml(
+        post.id
+      )}">Удалить</button>`
+    : '';
+
+  return `
+    <li class="post" data-post-id="${escapeHtml(post.id)}">
+      ${headerHtml}
       <div class="post-image-container">
-        <img class="post-image" src="${post.imageUrl}">
+        <img class="post-image" src="${escapeHtml(post.imageUrl)}">
       </div>
       <div class="post-likes">
-        <button data-post-id="${post.id}" class="like-button">
-          <img src="./assets/images/${isLikeImage}">
+        <button data-post-id="${escapeHtml(post.id)}" class="like-button">
+          <img src="./assets/images/${likeImage}">
         </button>
         <p class="post-likes-text">
           Нравится: <strong>${post.likes.length}</strong>
         </p>
+        ${deleteButtonHtml}
       </div>
       <p class="post-text">
-        <span class="user-name">${post.user.name}</span>
-        ${post.description}
+        <span class="user-name">${escapeHtml(post.user.name)}</span>
+        ${escapeHtml(post.description)}
       </p>
       <p class="post-date">
         ${format(post.createdAt)}
       </p>
+    </li>
+  `;
+}
 
-    `;
-
-    postsContainer.append(postEl);
-  });
-
-  appEl.innerHTML = '';
-  appEl.append(container);
-
-  renderHeaderComponent({
-    element: document.querySelector('.header-container'),
-  });
-
-  for (let userEl of document.querySelectorAll('.post-header')) {
+function bindPostEvents(container) {
+  for (const userEl of container.querySelectorAll('.post-header')) {
     userEl.addEventListener('click', () => {
       goToPage(USER_POSTS_PAGE, {
         userId: userEl.dataset.userId,
@@ -72,68 +62,82 @@ export function renderPostsPageComponent({ appEl }) {
     });
   }
 
-  for (let likeEl of document.querySelectorAll('.like-button')) {
+  for (const likeEl of container.querySelectorAll('.like-button')) {
     likeEl.addEventListener('click', (event) => {
-      const button = event.currentTarget;
-      toLike(button);
+      toLike(event.currentTarget);
+    });
+  }
+
+  for (const deleteEl of container.querySelectorAll('.post-delete-button')) {
+    deleteEl.addEventListener('click', (event) => {
+      removePost(event.currentTarget.dataset.postId);
     });
   }
 }
 
-export function renderUserPostsPageComponent({ appEl }) {
-  console.log('Актуальный список постов юзера:', posts);
-
+export function renderPostsPageComponent({ appEl }) {
   const container = document.createElement('div');
   container.classList.add('page-container');
+
   const headerContainer = document.createElement('div');
   headerContainer.classList.add('header-container');
+
   const postsContainer = document.createElement('ul');
   postsContainer.classList.add('posts');
+
+  postsContainer.innerHTML = posts
+    .map((post) => renderPostTemplate(post, { showHeader: true }))
+    .join('');
+
   container.append(headerContainer, postsContainer);
-
-  posts.forEach((post) => {
-    const postEl = document.createElement('li');
-    postEl.classList.add('post');
-    const isLikeImage = post.isLiked
-      ? 'like-active.svg'
-      : 'like-not-active.svg';
-
-    postEl.innerHTML = `
-      <div class="post-image-container">
-        <img class="post-image" src="${post.imageUrl}">
-      </div>
-      <div class="post-likes">
-        <button data-post-id="${post.id}" class="like-button">
-          <img src="./assets/images/${isLikeImage}">
-        </button>
-        <p class="post-likes-text">
-          Нравится: <strong>${post.likes.length}</strong>
-        </p>
-      </div>
-      <p class="post-text">
-        <span class="user-name">${post.user.name}</span>
-        ${post.description}
-      </p>
-      <p class="post-date">
-        ${format(post.createdAt)}
-      </p>
-
-    `;
-
-    postsContainer.append(postEl);
-  });
-
   appEl.innerHTML = '';
   appEl.append(container);
 
   renderHeaderComponent({
-    element: document.querySelector('.header-container'),
+    element: container.querySelector('.header-container'),
   });
 
-  for (let likeEl of document.querySelectorAll('.like-button')) {
-    likeEl.addEventListener('click', (event) => {
-      const button = event.currentTarget;
-      toLike(button);
-    });
-  }
+  bindPostEvents(container);
+}
+
+export function renderUserPostsPageComponent({ appEl }) {
+  const container = document.createElement('div');
+  container.classList.add('page-container');
+
+  const headerContainer = document.createElement('div');
+  headerContainer.classList.add('header-container');
+
+  const postsContainer = document.createElement('ul');
+  postsContainer.classList.add('posts');
+
+  const firstPost = posts[0];
+  const userHeaderHtml = firstPost
+    ? `
+      <div class="posts-user-header">
+        <img
+          class="posts-user-header__user-image"
+          src="${escapeHtml(firstPost.user.imageUrl)}"
+        />
+        <p class="posts-user-header__user-name">${escapeHtml(
+          firstPost.user.name
+        )}</p>
+      </div>
+    `
+    : '';
+
+  postsContainer.innerHTML =
+    userHeaderHtml +
+    posts
+      .map((post) => renderPostTemplate(post, { showHeader: false }))
+      .join('');
+
+  container.append(headerContainer, postsContainer);
+  appEl.innerHTML = '';
+  appEl.append(container);
+
+  renderHeaderComponent({
+    element: container.querySelector('.header-container'),
+  });
+
+  bindPostEvents(container);
 }
