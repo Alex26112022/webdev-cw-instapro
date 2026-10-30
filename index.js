@@ -156,6 +156,9 @@ const renderApp = () => {
 };
 
 export function toLike(button) {
+  if (button.dataset.loading === 'true') return;
+  button.dataset.loading = 'true';
+
   const postId = button.dataset.postId;
   const img = button.querySelector('img');
   const src = img.getAttribute('src');
@@ -181,6 +184,7 @@ export function toLike(button) {
     .catch((err) => console.error('Не удалось изменить лайк:', err))
     .finally(() => {
       img.classList.remove('is-beating');
+      delete button.dataset.loading;
     });
 }
 
