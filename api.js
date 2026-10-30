@@ -63,6 +63,24 @@ export function addPost({ token, description, imageUrl }) {
     });
 }
 
+export function toLikeApi({ token, liked, postId }) {
+  return fetch(postsHost + `/${postId}/${liked}`, {
+    method: 'POST',
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then((response) => {
+      if (response.status !== 200) {
+        throw new Error('Ошибка при лайке');
+      }
+      return response.json();
+    })
+    .then((data) => {
+      return data.post;
+    });
+}
+
 export function registerUser({ login, password, name, imageUrl }) {
   return fetch(baseHost + '/api/user', {
     method: 'POST',

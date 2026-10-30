@@ -1,6 +1,9 @@
-import { goToPage, posts } from '../index.js';
+import format from '../format.js';
+import { goToPage, posts, toLike } from '../index.js';
 import { USER_POSTS_PAGE } from '../routes.js';
 import { renderHeaderComponent } from './header-component.js';
+
+window.__localeId__ = 'ru';
 
 export function renderPostsPageComponent({ appEl }) {
   // @TODO: реализовать рендер постов из api
@@ -46,7 +49,7 @@ export function renderPostsPageComponent({ appEl }) {
         ${post.description}
       </p>
       <p class="post-date">
-        ${post.createdAt}
+        ${format(post.createdAt)}
       </p>
 
     `;
@@ -68,10 +71,16 @@ export function renderPostsPageComponent({ appEl }) {
       });
     });
   }
+
+  for (let likeEl of document.querySelectorAll('.like-button')) {
+    likeEl.addEventListener('click', (event) => {
+      const button = event.currentTarget;
+      toLike(button);
+    });
+  }
 }
 
 export function renderUserPostsPageComponent({ appEl }) {
-  // @TODO: реализовать рендер постов из api
   console.log('Актуальный список постов юзера:', posts);
 
   const container = document.createElement('div');
@@ -106,7 +115,7 @@ export function renderUserPostsPageComponent({ appEl }) {
         ${post.description}
       </p>
       <p class="post-date">
-        ${post.createdAt}
+        ${format(post.createdAt)}
       </p>
 
     `;
@@ -120,4 +129,11 @@ export function renderUserPostsPageComponent({ appEl }) {
   renderHeaderComponent({
     element: document.querySelector('.header-container'),
   });
+
+  for (let likeEl of document.querySelectorAll('.like-button')) {
+    likeEl.addEventListener('click', (event) => {
+      const button = event.currentTarget;
+      toLike(button);
+    });
+  }
 }

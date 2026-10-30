@@ -1,4 +1,4 @@
-import { addPost, getPosts, getUserPosts } from './api.js';
+import { addPost, getPosts, getUserPosts, toLikeApi } from './api.js';
 import { renderAddPostPageComponent } from './components/add-post-page-component.js';
 import { renderAuthPageComponent } from './components/auth-page-component.js';
 import { renderLoadingPageComponent } from './components/loading-page-component.js';
@@ -146,5 +146,27 @@ const renderApp = () => {
     return renderUserPostsPageComponent({ appEl });
   }
 };
+
+export function toLike(button) {
+  console.log('Кликаю лайк...');
+  const postId = button.dataset.postId;
+  const img = button.querySelector('img');
+  const src = img.getAttribute('src');
+  const filename = src.split('/').pop();
+  const action = filename === 'like-active.svg' ? 'dislike' : 'like';
+  const postEl = button.closest('.post');
+  const likesCounter = postEl.querySelector('.post-likes-text strong');
+
+  toLikeApi({ token: getToken(), liked: action, postId })
+    .then((post) => {
+      img.setAttribute(
+        'src',
+        `./assets/images/${post.isLiked ? 'like-active.svg' : 'like-not-active.svg'}`
+      );
+      likesCounter.textContent = post.likes.length;
+      console.log('Лайк изменен', post.isLiked);
+    })
+    .catch((err) => console.error('Не удалось изменить лайк:', err));
+}
 
 goToPage(POSTS_PAGE);
