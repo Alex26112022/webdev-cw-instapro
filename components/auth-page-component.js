@@ -1,6 +1,6 @@
-import { loginUser, registerUser } from "../api.js";
-import { renderHeaderComponent } from "./header-component.js";
-import { renderUploadImageComponent } from "./upload-image-component.js";
+import { loginUser, registerUser } from '../api.js';
+import { renderHeaderComponent } from './header-component.js';
+import { renderUploadImageComponent } from './upload-image-component.js';
 
 /**
  * Компонент страницы авторизации.
@@ -24,7 +24,7 @@ export function renderAuthPageComponent({ appEl, setUser }) {
    * Используется только в режиме регистрации.
    * @type {string}
    */
-  let imageUrl = "";
+  let imageUrl = '';
 
   /**
    * Рендерит форму авторизации или регистрации.
@@ -38,8 +38,8 @@ export function renderAuthPageComponent({ appEl, setUser }) {
               <h3 class="form-title">
                 ${
                   isLoginMode
-                    ? "Вход в&nbsp;Instapro"
-                    : "Регистрация в&nbsp;Instapro"
+                    ? 'Вход в&nbsp;Instapro'
+                    : 'Регистрация в&nbsp;Instapro'
                 }
               </h3>
               <div class="form-inputs">
@@ -49,25 +49,25 @@ export function renderAuthPageComponent({ appEl, setUser }) {
                       <div class="upload-image-container"></div>
                       <input type="text" id="name-input" class="input" placeholder="Имя" />
                       `
-                      : ""
+                      : ''
                   }
                   <input type="text" id="login-input" class="input" placeholder="Логин" />
                   <input type="password" id="password-input" class="input" placeholder="Пароль" />
                   <div class="form-error"></div>
                   <button class="button" id="login-button">${
-                    isLoginMode ? "Войти" : "Зарегистрироваться"
+                    isLoginMode ? 'Войти' : 'Зарегистрироваться'
                   }</button>
               </div>
               <div class="form-footer">
                 <p class="form-footer-title">
-                  ${isLoginMode ? "Нет аккаунта?" : "Уже есть аккаунт?"}
+                  ${isLoginMode ? 'Нет аккаунта?' : 'Уже есть аккаунт?'}
                   <button class="link-button" id="toggle-button">
-                    ${isLoginMode ? "Зарегистрироваться." : "Войти."}
+                    ${isLoginMode ? 'Зарегистрироваться.' : 'Войти.'}
                   </button>
                 </p>
               </div>
           </div>
-      </div>    
+      </div>
     `;
 
     appEl.innerHTML = appHtml;
@@ -77,16 +77,16 @@ export function renderAuthPageComponent({ appEl, setUser }) {
      * @param {string} message - Текст сообщения об ошибке.
      */
     const setError = (message) => {
-      appEl.querySelector(".form-error").textContent = message;
+      appEl.querySelector('.form-error').textContent = message;
     };
 
     // Рендерим заголовок страницы
     renderHeaderComponent({
-      element: document.querySelector(".header-container"),
+      element: document.querySelector('.header-container'),
     });
 
     // Если режим регистрации, рендерим компонент загрузки изображения
-    const uploadImageContainer = appEl.querySelector(".upload-image-container");
+    const uploadImageContainer = appEl.querySelector('.upload-image-container');
     if (uploadImageContainer) {
       renderUploadImageComponent({
         element: uploadImageContainer,
@@ -97,21 +97,21 @@ export function renderAuthPageComponent({ appEl, setUser }) {
     }
 
     // Обработка клика на кнопку входа/регистрации
-    document.getElementById("login-button").addEventListener("click", () => {
-      setError("");
+    document.getElementById('login-button').addEventListener('click', () => {
+      setError('');
 
       if (isLoginMode) {
         // Обработка входа
-        const login = document.getElementById("login-input").value;
-        const password = document.getElementById("password-input").value;
+        const login = document.getElementById('login-input').value;
+        const password = document.getElementById('password-input').value;
 
         if (!login) {
-          alert("Введите логин");
+          alert('Введите логин');
           return;
         }
 
         if (!password) {
-          alert("Введите пароль");
+          alert('Введите пароль');
           return;
         }
 
@@ -125,27 +125,27 @@ export function renderAuthPageComponent({ appEl, setUser }) {
           });
       } else {
         // Обработка регистрации
-        const login = document.getElementById("login-input").value;
-        const name = document.getElementById("name-input").value;
-        const password = document.getElementById("password-input").value;
+        const login = document.getElementById('login-input').value;
+        const name = document.getElementById('name-input').value;
+        const password = document.getElementById('password-input').value;
 
         if (!name) {
-          alert("Введите имя");
+          alert('Введите имя');
           return;
         }
 
         if (!login) {
-          alert("Введите логин");
+          alert('Введите логин');
           return;
         }
 
         if (!password) {
-          alert("Введите пароль");
+          alert('Введите пароль');
           return;
         }
 
         if (!imageUrl) {
-          alert("Не выбрана фотография");
+          alert('Не выбрана фотография');
           return;
         }
 
@@ -161,7 +161,7 @@ export function renderAuthPageComponent({ appEl, setUser }) {
     });
 
     // Обработка переключения режима (вход ↔ регистрация)
-    document.getElementById("toggle-button").addEventListener("click", () => {
+    document.getElementById('toggle-button').addEventListener('click', () => {
       isLoginMode = !isLoginMode;
       renderForm(); // Перерисовываем форму с новым режимом
     });

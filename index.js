@@ -1,20 +1,29 @@
-import { getPosts } from "./api.js";
-import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
-import { renderAuthPageComponent } from "./components/auth-page-component.js";
+import {
+  addPost,
+  deletePost,
+  getPosts,
+  getUserPosts,
+  toLikeApi,
+} from './api.js';
+import { renderAddPostPageComponent } from './components/add-post-page-component.js';
+import { renderAuthPageComponent } from './components/auth-page-component.js';
+import { renderLoadingPageComponent } from './components/loading-page-component.js';
+import {
+  renderPostsPageComponent,
+  renderUserPostsPageComponent,
+} from './components/posts-page-component.js';
+import {
+  getUserFromLocalStorage,
+  removeUserFromLocalStorage,
+  saveUserToLocalStorage,
+} from './helpers.js';
 import {
   ADD_POSTS_PAGE,
   AUTH_PAGE,
   LOADING_PAGE,
   POSTS_PAGE,
   USER_POSTS_PAGE,
-} from "./routes.js";
-import { renderPostsPageComponent } from "./components/posts-page-component.js";
-import { renderLoadingPageComponent } from "./components/loading-page-component.js";
-import {
-  getUserFromLocalStorage,
-  removeUserFromLocalStorage,
-  saveUserToLocalStorage,
-} from "./helpers.js";
+} from './routes.js';
 
 export let user = getUserFromLocalStorage();
 export let page = null;
@@ -67,11 +76,19 @@ export const goToPage = (newPage, data) => {
     }
 
     if (newPage === USER_POSTS_PAGE) {
-      // @@TODO: реализовать получение постов юзера из API
-      console.log("Открываю страницу пользователя: ", data.userId);
-      page = USER_POSTS_PAGE;
-      posts = [];
-      return renderApp();
+      page = LOADING_PAGE;
+      renderApp();
+
+      return getUserPosts({ token: getToken(), userId: data.userId })
+        .then((newPosts) => {
+          page = USER_POSTS_PAGE;
+          posts = newPosts;
+          renderApp();
+        })
+        .catch((error) => {
+          console.error(error);
+          goToPage(POSTS_PAGE);
+        });
     }
 
     page = newPage;
@@ -80,11 +97,11 @@ export const goToPage = (newPage, data) => {
     return;
   }
 
-  throw new Error("страницы не существует");
+  throw new Error('страницы не существует');
 };
 
 const renderApp = () => {
-  const appEl = document.getElementById("app");
+  const appEl = document.getElementById('app');
   if (page === LOADING_PAGE) {
     return renderLoadingPageComponent({
       appEl,
@@ -97,7 +114,8 @@ const renderApp = () => {
     return renderAuthPageComponent({
       appEl,
       setUser: (newUser) => {
-        user = newUser;
+        const { password, _id, ...rest } = newUser;
+        user = { ...rest, id: newUser.id ?? _id };
         saveUserToLocalStorage(user);
         goToPage(POSTS_PAGE);
       },
@@ -110,9 +128,18 @@ const renderApp = () => {
     return renderAddPostPageComponent({
       appEl,
       onAddPostClick({ description, imageUrl }) {
-        // @TODO: реализовать добавление поста в API
-        console.log("Добавляю пост...", { description, imageUrl });
-        goToPage(POSTS_PAGE);
+        addPost({
+          token: getToken(),
+          description,
+          imageUrl,
+        })
+          .then(() => {
+            goToPage(POSTS_PAGE);
+          })
+          .catch((error) => {
+            console.error(error);
+            alert('Не удалось добавить пост. Попробуйте ещё раз.');
+          });
       },
     });
   }
@@ -124,10 +151,56 @@ const renderApp = () => {
   }
 
   if (page === USER_POSTS_PAGE) {
-    // @TODO: реализовать страницу с фотографиями отдельного пользвателя
-    appEl.innerHTML = "Здесь будет страница фотографий пользователя";
-    return;
+    return renderUserPostsPageComponent({ appEl });
   }
 };
+
+export function toLike(button) {
+  if (button.dataset.loading === 'true') return;
+  button.dataset.loading = 'true';
+
+  const postId = button.dataset.postId;
+  const img = button.querySelector('img');
+  const src = img.getAttribute('src');
+  const filename = src.split('/').pop();
+  const action = filename === 'like-active.svg' ? 'dislike' : 'like';
+  const postEl = button.closest('.post');
+  const likesCounter = postEl.querySelector('.post-likes-text strong');
+
+  img.classList.add('is-beating');
+
+  toLikeApi({ token: getToken(), liked: action, postId })
+    .then((post) => {
+      const idx = posts.findIndex((p) => p.id === post.id);
+      if (idx !== -1) {
+        posts[idx] = post;
+      }
+      img.setAttribute(
+        'src',
+        `./assets/images/${post.isLiked ? 'like-active.svg' : 'like-not-active.svg'}`
+      );
+      likesCounter.textContent = post.likes.length;
+    })
+    .catch((err) => console.error('Не удалось изменить лайк:', err))
+    .finally(() => {
+      img.classList.remove('is-beating');
+      delete button.dataset.loading;
+    });
+}
+
+export function removePost(postId) {
+  if (!postId) return;
+  if (!confirm('Удалить пост?')) return;
+
+  deletePost({ token: getToken(), postId })
+    .then(() => {
+      posts = posts.filter((p) => p.id !== postId);
+      renderApp();
+    })
+    .catch((error) => {
+      console.error(error);
+      alert('Не удалось удалить пост.');
+    });
+}
 
 goToPage(POSTS_PAGE);
